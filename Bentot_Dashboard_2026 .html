@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bentot — Dashboard 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;padding:1rem;color:#111}
+.db{max-width:900px;margin:0 auto;padding:0 0 2rem}
+.hdr{background:#1F4E79;color:#fff;padding:1rem 1.25rem;border-radius:12px;margin-bottom:1.25rem}
+.hdr h1{font-size:17px;font-weight:500;letter-spacing:-0.01em}
+.hdr p{font-size:12px;opacity:0.65;margin-top:3px}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.25rem}
+@media(max-width:500px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:#fff;border-radius:10px;padding:0.85rem 1rem;min-width:0;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.kpi-lbl{font-size:11px;color:#888;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-val{font-size:20px;font-weight:500;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-sub{font-size:11px;margin-top:4px}
+.card{background:#fff;border:0.5px solid #e0e0e0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.card-title{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1rem}
+.tab-row{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
+.tab{font-size:12px;padding:5px 14px;border-radius:20px;border:0.5px solid #ccc;cursor:pointer;background:transparent;color:#666;transition:all 0.15s}
+.tab.on{background:#1F4E79;color:#fff;border-color:#1F4E79}
+.ch-wrap{position:relative;width:100%;height:200px}
+.leg{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.leg-i{display:flex;align-items:center;gap:5px;font-size:11px;color:#888}
+.leg-sq{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.tip{background:#f0f4f8;border-radius:8px;padding:0.75rem 1rem;font-size:12px;color:#555;border-left:3px solid #1F4E79;margin-bottom:1.25rem;line-height:1.5}
+.month-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
+.mtab{font-size:12px;padding:4px 12px;border-radius:20px;border:0.5px solid #ccc;cursor:pointer;background:transparent;color:#666}
+.mtab.on{background:#1F4E79;color:#fff;border-color:#1F4E79}
+.inp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inp-row label{font-size:11px;color:#888;display:block;margin-bottom:4px}
+.inp-row input{width:100%;padding:7px 10px;font-size:13px;border:0.5px solid #ccc;border-radius:8px;background:#f9f9f9;color:#111}
+.inp-row input:focus{outline:none;border-color:#1F4E79}
+.inp-hint{font-size:10px;color:#aaa;margin-top:3px}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:1rem}
+.nav-btn{font-size:12px;padding:5px 14px;border-radius:8px;border:0.5px solid #ccc;cursor:pointer;background:transparent;color:#111}
+.nav-btn:hover{background:#f0f0f0}
+.m-indicator{font-size:13px;font-weight:500;color:#111}
+.prog-bar{height:6px;background:#eee;border-radius:3px;margin-top:6px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width 0.3s;background:#1F4E79}
+</style>
+</head>
+<body>
+<div class="db">
+<div class="hdr">
+  <h1>Bentot — Dashboard 2026</h1>
+  <p>Nhập số theo tháng, biểu đồ & KPI tự cập nhật</p>
+</div>
+
+<div class="kpi-grid" id="kpiGrid"></div>
+<div class="tip" id="tipBar">Điền dữ liệu để nhận phân tích.</div>
+
+<div class="card">
+  <div class="tab-row">
+    <button class="tab on" onclick="sw('revenue',this)">Doanh thu</button>
+    <button class="tab" onclick="sw('profit',this)">Lãi / Lỗ</button>
+    <button class="tab" onclick="sw('fc',this)">Food Cost</button>
+    <button class="tab" onclick="sw('portions',this)">Số phần</button>
+  </div>
+  <div class="leg" id="leg"></div>
+  <div class="ch-wrap"><canvas id="mc"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Nhập dữ liệu tháng</div>
+  <div class="month-tabs" id="mTabs"></div>
+  <div class="inp-grid">
+    <div class="inp-row">
+      <label>Doanh thu (triệu đ)</label>
+      <input type="number" id="f-rev" step="0.1" min="0" oninput="save()">
+      <div class="inp-hint">Ví dụ: 50 = 50 triệu đồng</div>
+    </div>
+    <div class="inp-row">
+      <label>COGS / Nguyên liệu (triệu đ)</label>
+      <input type="number" id="f-cogs" step="0.1" min="0" oninput="save()">
+    </div>
+    <div class="inp-row">
+      <label>Chi phí cố định (triệu đ)</label>
+      <input type="number" id="f-fix" step="0.1" min="0" oninput="save()">
+    </div>
+    <div class="inp-row">
+      <label>Số phần bán (tháng)</label>
+      <input type="number" id="f-por" step="1" min="0" oninput="save()">
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="nav-btn" onclick="prevM()">← Trước</button>
+    <span class="m-indicator" id="mInd"></span>
+    <button class="nav-btn" onclick="nextM()">Sau →</button>
+  </div>
+  <div style="margin-top:10px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:4px">
+      <span>Tiến độ điền dữ liệu</span>
+      <span id="progTxt"></span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+  </div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const MN=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+const TARGET=80;
+let curM=0;
+let data={
+  rev: [35,22,50,0,0,0,0,0,0,0,0,0],
+  cogs:[18,12,24,0,0,0,0,0,0,0,0,0],
+  fix: [13,13,13,13,13,13,13,13,13,13,13,13],
+  por: [660,420,880,0,0,0,0,0,0,0,0,0],
+};
+
+function fmtM(v){return v.toFixed(1)+'tr'}
+function fmtN(v){return Math.round(v).toLocaleString('vi-VN')}
+
+function buildTabs(){
+  document.getElementById('mTabs').innerHTML=MN.map((m,i)=>`<button class="mtab${i===curM?' on':''}" onclick="selM(${i})">${m}</button>`).join('');
+}
+function selM(i){curM=i;buildTabs();loadInputs();}
+function prevM(){if(curM>0){curM--;buildTabs();loadInputs();}}
+function nextM(){if(curM<11){curM++;buildTabs();loadInputs();}}
+
+function loadInputs(){
+  document.getElementById('f-rev').value=data.rev[curM]||'';
+  document.getElementById('f-cogs').value=data.cogs[curM]||'';
+  document.getElementById('f-fix').value=data.fix[curM]||'';
+  document.getElementById('f-por').value=data.por[curM]||'';
+  document.getElementById('mInd').textContent=MN[curM]+' / 2026';
+}
+
+function save(){
+  data.rev[curM]=parseFloat(document.getElementById('f-rev').value)||0;
+  data.cogs[curM]=parseFloat(document.getElementById('f-cogs').value)||0;
+  data.fix[curM]=parseFloat(document.getElementById('f-fix').value)||0;
+  data.por[curM]=parseFloat(document.getElementById('f-por').value)||0;
+  refreshAll();
+}
+
+function refreshKPI(){
+  const active=MN.map((_,i)=>i).filter(i=>data.rev[i]>0);
+  const n=active.length||1;
+  const tRev=active.reduce((s,i)=>s+data.rev[i],0);
+  const tCOGS=active.reduce((s,i)=>s+data.cogs[i],0);
+  const tFix=active.reduce((s,i)=>s+data.fix[i],0);
+  const tNet=tRev-tCOGS-tFix;
+  const fc=tRev>0?tCOGS/tRev*100:0;
+  const tPor=active.reduce((s,i)=>s+data.por[i],0);
+  const avgPorDay=tPor>0?Math.round(tPor/(n*22)):0;
+  const tTarget=TARGET*n;
+  const vsT=tRev>0?((tRev-tTarget)/tTarget*100):null;
+  const filled=MN.filter((_,i)=>data.rev[i]>0).length;
+  document.getElementById('progTxt').textContent=filled+'/12 tháng';
+  document.getElementById('progFill').style.width=(filled/12*100)+'%';
+
+  const kpis=[
+    {l:'Tổng doanh thu',v:fmtM(tRev),s:vsT!==null?`${vsT>=0?'+':''}${vsT.toFixed(1)}% vs target`:'-',sc:vsT!==null&&vsT>=0?'#2E7D32':'#C62828',vc:'#2E7D32'},
+    {l:'Food Cost %',v:fc.toFixed(1)+'%',s:fc<=35?'Tốt':fc<=42?'Cảnh báo':'Nguy hiểm',sc:fc<=35?'#2E7D32':fc<=42?'#E65100':'#C62828',vc:fc<=35?'#00695C':fc<=42?'#E65100':'#C62828'},
+    {l:'Lãi / Lỗ ròng',v:fmtM(tNet),s:tNet>=0?'Có lãi':'Đang lỗ',sc:tNet>=0?'#2E7D32':'#C62828',vc:tNet>=0?'#1565C0':'#C62828'},
+    {l:'Lãi gộp',v:fmtM(tRev-tCOGS),s:'Gross: '+(tRev>0?((tRev-tCOGS)/tRev*100).toFixed(0):0)+'%',sc:'#888',vc:'#1565C0'},
+    {l:'Số phần / ngày',v:avgPorDay,s:'Tổng: '+fmtN(tPor)+' phần',sc:'#888',vc:'#1F4E79'},
+    {l:'AOV trung bình',v:tPor>0?fmtN(tRev*1e6/tPor)+'đ':'—',s:'Mỗi phần',sc:'#888',vc:'#4A148C'},
+  ];
+
+  document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`
+    <div class="kpi">
+      <div class="kpi-lbl">${k.l}</div>
+      <div class="kpi-val" style="color:${k.vc}">${k.v}</div>
+      <div class="kpi-sub" style="color:${k.sc}">${k.s}</div>
+    </div>`).join('');
+
+  let tip='';
+  if(active.length===0) tip='Chưa có dữ liệu. Điền tháng đầu tiên để bắt đầu.';
+  else if(fc>42) tip='Food Cost '+fc.toFixed(0)+'% — vượt ngưỡng nguy hiểm. Kiểm tra lại giá nguyên liệu và định lượng ngay tuần này.';
+  else if(vsT!==null&&vsT<-15) tip='Doanh thu thấp hơn target '+Math.abs(vsT).toFixed(0)+'%. Ưu tiên chốt thêm hợp đồng B2B để tăng nhanh.';
+  else if(tNet<0) tip='Đang lỗ '+fmtM(Math.abs(tNet))+'. Xem lại chi phí cố định — đặc biệt kiểm tra lương và tiền thuê mặt bằng.';
+  else if(avgPorDay<35) tip='Số phần '+avgPorDay+'/ngày chưa đạt break-even (~35 phần). Tập trung tăng đơn B2B trong tuần này.';
+  else tip='Bentot đang hoạt động ổn định. Food cost kiểm soát tốt, có lãi. Tập trung tăng số phần/ngày để scale doanh thu.';
+  document.getElementById('tipBar').textContent=tip;
+}
+
+let chart=null,curMode='revenue';
+
+function sw(mode,el){
+  curMode=mode;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  renderChart(mode);
+}
+
+function renderChart(mode){
+  const ctx=document.getElementById('mc').getContext('2d');
+  if(chart){chart.destroy();chart=null;}
+  const leg=document.getElementById('leg');
+
+  if(mode==='revenue'){
+    leg.innerHTML=`<div class="leg-i"><div class="leg-sq" style="background:#2E7D32"></div>Doanh thu (tr)</div><div class="leg-i"><div class="leg-sq" style="background:#7B1FA2;opacity:0.6"></div>Target ${TARGET}tr</div>`;
+    chart=new Chart(ctx,{type:'bar',data:{labels:MN,datasets:[
+      {label:'Doanh thu',data:data.rev,backgroundColor:MN.map((_,i)=>data.rev[i]>=TARGET?'#2E7D32':'#81C784'),borderRadius:4,borderSkipped:false,order:2},
+      {label:'Target',data:MN.map(()=>TARGET),type:'line',borderColor:'#7B1FA2',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false,order:1},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>' '+d.raw+'tr'}}},scales:{y:{ticks:{callback:v=>v+'tr'},grid:{color:'rgba(128,128,128,0.08)'},border:{display:false}},x:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}}}}}});
+  } else if(mode==='profit'){
+    const gp=data.rev.map((v,i)=>parseFloat((v-data.cogs[i]).toFixed(1)));
+    const np=data.rev.map((v,i)=>parseFloat((v-data.cogs[i]-data.fix[i]).toFixed(1)));
+    leg.innerHTML=`<div class="leg-i"><div class="leg-sq" style="background:#1565C0"></div>Lãi gộp</div><div class="leg-i"><div class="leg-sq" style="background:#E65100"></div>Lãi ròng (+) / Lỗ (−)</div>`;
+    chart=new Chart(ctx,{type:'bar',data:{labels:MN,datasets:[
+      {label:'Lãi gộp',data:gp,backgroundColor:'#90CAF9',borderRadius:4,order:2},
+      {label:'Lãi/Lỗ ròng',data:np,backgroundColor:np.map(v=>v>=0?'#E65100':'#C62828'),borderRadius:4,order:1},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>' '+d.raw+'tr'}}},scales:{y:{ticks:{callback:v=>v+'tr'},grid:{color:'rgba(128,128,128,0.08)'},border:{display:false}},x:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}}}}}});
+  } else if(mode==='fc'){
+    const fc=data.rev.map((v,i)=>v>0?parseFloat((data.cogs[i]/v*100).toFixed(1)):null);
+    leg.innerHTML=`<div class="leg-i"><div class="leg-sq" style="background:#00695C"></div>Food Cost %</div><div class="leg-i"><div class="leg-sq" style="background:#C62828;opacity:0.5"></div>Ngưỡng 35%</div>`;
+    chart=new Chart(ctx,{type:'line',data:{labels:MN,datasets:[
+      {label:'Food Cost',data:fc,borderColor:'#00695C',backgroundColor:'rgba(0,105,92,0.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:fc.map(v=>v===null?'transparent':v<=35?'#00695C':v<=42?'#E65100':'#C62828'),fill:true,tension:0.35,spanGaps:false},
+      {label:'Target',data:MN.map(()=>35),borderColor:'#C62828',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>d.raw!==null?' '+d.raw+'%':''}}},scales:{y:{min:0,max:65,ticks:{callback:v=>v+'%'},grid:{color:'rgba(128,128,128,0.08)'},border:{display:false}},x:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}}}}}});
+  } else {
+    leg.innerHTML=`<div class="leg-i"><div class="leg-sq" style="background:#1F4E79"></div>Số phần / tháng</div>`;
+    chart=new Chart(ctx,{type:'bar',data:{labels:MN,datasets:[
+      {label:'Số phần',data:data.por,backgroundColor:'#1F4E79',borderRadius:4},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>' '+Math.round(d.raw)+' phần'}}},scales:{y:{ticks:{callback:v=>v+' phần'},grid:{color:'rgba(128,128,128,0.08)'},border:{display:false}},x:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}}}}}});
+  }
+}
+
+function refreshAll(){refreshKPI();renderChart(curMode);}
+buildTabs();loadInputs();refreshAll();
+</script>
+</body>
+</html>
